@@ -1,7 +1,8 @@
 require('dotenv').config()
 import express from 'express';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-import bodyParser from 'body-parser';
+import jwt from 'express-jwt';
+import * as bodyParser from 'body-parser-graphql'
 import * as Schema from './schema';
 
 const PORT = 3000;
@@ -23,21 +24,23 @@ const rootFunction =
 
 const contextFunction =
   Schema.context ||
-  function(headers, secrets) {
+  function(headers) {
     return Object.assign(
       {
         headers: headers,
       },
-      secrets
     );
   };
 
-server.use('/graphql', bodyParser.json(), graphqlExpress(async (request) => {
+server.use('/graphql', jwt({
+  secret: process.env.JWT_SECRET,
+  credentialsRequired: false,
+}), bodyParser.graphql(), graphqlExpress(async req => {
   if (!schema) {
     schema = schemaFunction(process.env)
   }
-  const context = await contextFunction(request.headers, process.env);
-  const rootValue = await rootFunction(request.headers, process.env);
+  const context = await contextFunction(req.headers, process.env);
+  const rootValue = await rootFunction(req.headers, process.env);
 
   return {
     schema: await schema,

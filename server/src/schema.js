@@ -11,18 +11,15 @@ const typeDefs = [`
 		jwt: String
   },
   type NGO {
-    _id: Int!,
-    name: String,
-    mission: String,
-    description: String,
-    logo: String,
-    dateFounded: String,
+    _id: String
+    name: String
+    mission: String
+    description: String
+    logo: String
+    dateFounded: String
     cause1: String,
-    cause2: String,
-    images:[String],
-    projects:[Project],
-    ctas:[CTA],
-    sponsors:[Sponsor]
+    cause2: String
+    images:[String]
   },
   type Project {
     _id: String,
@@ -61,50 +58,24 @@ const typeDefs = [`
     supportedProjects:[Project],
   },
   type Query {
-    allNGOS: [NGO],
-    ngo(id: Int!): NGO,
     currentUser: User
   },
   type Mutation {
     login(email: String!, password: String!): User
     signup(email: String!, password: String!): User
-  },
+    createNGO(name: String!, mission: String!): NGO
+  }
 `];
 
 const resolvers = {
   Query: {
     currentUser: (root, args, { user }) => {
       return user;
-    },
-    // allNGOS: () => {
-    //   // return someData;
-    // },
-    // ngo: (root, {id}) => {
-    //   return somedata.filter(ngo => {
-    //     return ngo.id === id;
-    //   })[0];
-    // }
+    }
   },
   Mutation: {
-    login: async (root, { email, password }, { secrets, mongo }) => {
-      const Users = mongo.collection('users');
+    signup: async (root, { email, password }, { mongo }) => {
 
-      const user = await Users.findOne({ email });
-      if (!user) {
-        throw new Error ('User does not exist, register first');
-      }
-
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) {
-        throw new Error ('Password is incorrect');
-      }
-
-      //if logged in, generate JWT and pass it to the user doc
-      user.jwt = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-      return user;
-    },
-
-    signup: async (root, { email, password }, { mongo, secrets }) => {
       const Users = mongo.collection('users');
       const existingUser = await Users.findOne({ email });
 
@@ -120,15 +91,42 @@ const resolvers = {
       });
 
       const user = await Users.findOne({ email });
-
       user.jwt = jwt.sign({ _id: user._id }, process.env.JWT_SECRET );
-
+      console.log('User created');
       return user;
     },
-  },
+
+    createNGO: async (root, { name, mission }, { mongo }) => {
+      const Ngo = mongo.collection('ngo');
+      await Ngo.insert({
+        name,
+        mission,
+      });
+      const ngo = await Ngo.findOne({ name });
+      console.log(name + ' NGO Added');
+      return ngo;
+    },
+
+    login: async (root, { email, password }, { mongo }) => {
+      const Users = mongo.collection('users');
+
+      const user = await Users.findOne({ email });
+      if (!user) {
+        throw new Error ('User does not exist, register first');
+      }
+
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        throw new Error ('Password is incorrect');
+      }
+
+      user.jwt = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+      return user;
+    },
+  }
 };
 
-const getUser = async (authorization, secrets, mongo) => {
+const getUser = async (authorization, mongo) => {
   const bearerLength = "Bearer ".length;
   if (authorization && authorization.length > bearerLength) {
     const token = authorization.slice(bearerLength);
@@ -136,6 +134,7 @@ const getUser = async (authorization, secrets, mongo) => {
     const { ok, result } = await new Promise(resolve =>
   		jwt.verify(token, process.env.JWT_SECRET , (err, result ) => {
       	if (err){
+          console.log(err);
           resolve({
             ok: false,
             result: err,
@@ -159,18 +158,19 @@ const getUser = async (authorization, secrets, mongo) => {
   return null;
 };
 
+
 let mongo;
 let client;
-export async function context(headers, secrets) {
+
+export async function context(headers) {
   if(!mongo) {
-    client = await MongoClient.connect('mongodb://lukter4*:pichix39!@ds231739.mlab.com:31739/volunteer');
+    client = await MongoClient.connect(MONGO_URI);
   	mongo = client.db('volunteer');
   }
 
-  const user = await getUser(headers['authorization'], mongo, secrets );
+  const user = await getUser(headers['authorization'], mongo );
   return {
     headers,
-    secrets,
     mongo,
     user,
   };
