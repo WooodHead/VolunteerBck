@@ -58,6 +58,7 @@ const typeDefs = [`
     supportedProjects:[Project],
   },
   type Query {
+    ngosByName(name: String!): NGO,
     currentUser: User
   },
   type Mutation {
@@ -71,6 +72,12 @@ const resolvers = {
   Query: {
     currentUser: (root, args, { user }) => {
       return user;
+    },
+    ngosByName: async (root, { name }, { mongo }) => {
+      const Ngos = mongo.collection('ngos');
+      const ngosByName = await Ngos.findOne({ name });
+      console.log(ngosByName);
+      return ngosByName;
     }
   },
   Mutation: {
@@ -97,12 +104,12 @@ const resolvers = {
     },
 
     createNGO: async (root, { name, mission }, { mongo }) => {
-      const Ngo = mongo.collection('ngo');
-      await Ngo.insert({
+      const Ngos = mongo.collection('ngos');
+      await Ngos.insert({
         name,
         mission,
       });
-      const ngo = await Ngo.findOne({ name });
+      const ngo = await Ngos.findOne({ name });
       console.log(name + ' NGO Added');
       return ngo;
     },
@@ -112,15 +119,15 @@ const resolvers = {
 
       const user = await Users.findOne({ email });
       if (!user) {
-        throw new Error ('User does not exist, register first');
+        throw new Error ('Email does not exist, register first');
       }
-
       const validPassword = await bcrypt.compare(password, user.password);
+
       if (!validPassword) {
         throw new Error ('Password is incorrect');
       }
-
       user.jwt = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+      console.log('User ' + email + ' Logged In');
       return user;
     },
   }
@@ -128,6 +135,7 @@ const resolvers = {
 
 const getUser = async (authorization, mongo) => {
   const bearerLength = "Bearer ".length;
+
   if (authorization && authorization.length > bearerLength) {
     const token = authorization.slice(bearerLength);
 
@@ -154,7 +162,6 @@ const getUser = async (authorization, mongo) => {
       return null;
     }
   }
-
   return null;
 };
 
@@ -164,7 +171,7 @@ let client;
 
 export async function context(headers) {
   if(!mongo) {
-    client = await MongoClient.connect(MONGO_URI);
+    client = await MongoClient.connect(process.env.MONGO_URI);
   	mongo = client.db('volunteer');
   }
 

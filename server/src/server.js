@@ -36,6 +36,9 @@ server.use('/graphql', jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
+  if(req.user) {
+    console.log(req.user)
+  }
   if (!schema) {
     schema = schemaFunction(process.env)
   }
@@ -59,3 +62,6 @@ server.listen(PORT, () => {
   console.log(`Volunteer GraphQL Server is running on http://localhost:${PORT}/graphql`);
   console.log(`Volunteer View GraphiQL at http://localhost:${PORT}/graphiql`);
 });
+
+
+//
