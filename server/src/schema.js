@@ -62,7 +62,7 @@ const typeDefs = [`
   },
   type Mutation {
     login(email: String!, password: String!): User
-    signup(email: String!, password: String!): User
+    signup(email: String!, password: String!, name: String!): User
     createNGO(name: String!, mission: String!): NGO
   }
 `];

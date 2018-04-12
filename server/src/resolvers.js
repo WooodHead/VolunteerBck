@@ -21,16 +21,6 @@ export const Resolvers = {
   Mutation: {
     signup: async (_, { email, password, name }, { mongo }) => {
 
-      //validate user and email with Regex helpers
-      if (!validateEmail(email)){
-        throw new Error ('Please enter a valid email');
-      }
-
-      const acceptPwd = validatePassword(password)
-      if (acceptPwd !== 'Valid') {
-        throw new Error(acceptPwd);
-      }
-
       //If regex succeeds, check for existing user
       const Users = mongo.collection('users');
       const existingUser = await Users.findOne({ email });
@@ -38,8 +28,18 @@ export const Resolvers = {
       if (existingUser) {
         throw new Error('Email already used');
       }
+      // If email available, validate if valid email
+      if (!validateEmail(email)){
+        throw new Error ('Please enter a valid email');
+      }
 
-      //If available email, hash password with bycrpt and register user in db
+      //Validate pasword
+      const acceptPwd = validatePassword(password)
+      if (acceptPwd !== 'Valid') {
+        throw new Error(acceptPwd);
+      }
+
+      //If both succeed, hash password with bycrpt and register user in db
       const hash = await bcrypt.hash(password, 10);
       await Users.insert({
         email,
