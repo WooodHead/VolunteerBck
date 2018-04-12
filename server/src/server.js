@@ -1,41 +1,41 @@
 require('dotenv').config()
 import express from 'express';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
-import jwt from 'express-jwt';
 import { MongoClient, ObjectId } from 'mongodb';
+import jwt from 'express-jwt';
 import * as bodyParser from 'body-parser-graphql'
 import { executableSchema } from './schema';
 
 const PORT = 3000;
 const server = express();
 
+//Connect to DB
+let mongo;
+const getMongo = async () => {
+  try {
+    // this parse may fail
+    const client = await MongoClient.connect(process.env.MONGO_URI);
+    mongo = client.db('volunteer');
+    console.log('Connected to DB')
+  } catch (err) {
+    console.log('Could not connect to DB');
+    console.log(err);
+  }
+}
+
+getMongo();
+
 server.use('/graphql', jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
-
-  //Connect to mongo db database
-  let mongo;
-  if(!mongo) {
-    const client = await MongoClient.connect(process.env.MONGO_URI);
-    mongo = client.db('volunteer');
-  }
-
-  const Users = mongo.collection('users');
-  
-  //Log req.user for testing purposes
-  if (req.user) {
-    console.log(req.user);
-  }
 
   //Return schema and context with DB connection and user if exists.
   return {
     schema: executableSchema,
     context: {
       mongo: mongo,
-      user: req.user ?
-        Users.findOne({ where: { id: req.user.id }}) :
-        Promise.resolve(null),
+      user: req.user ? req.user._id : null
     },
   };
 }));
