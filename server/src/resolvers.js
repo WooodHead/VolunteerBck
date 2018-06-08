@@ -171,6 +171,8 @@ export const Resolvers = {
       console.log('User created');
       return user;
     },
+
+
     login: async (_, { email, password }, { mongo }) => {
       //Validate pasword
       const acceptPwd = validatePassword(password)
@@ -198,6 +200,52 @@ export const Resolvers = {
       console.log('User ' + email + ' Logged In');
       return user;
     },
+
+    signupAdmin: async (_, { orgName, orgEmail, name, lastName, password}, { mongo }) => {
+
+      // Validate if valid email
+      if (!validateEmail(orgEmail)){
+        throw new Error ('Please enter a valid email');
+      }
+
+      //Validate pasword
+      const acceptPwd = validatePassword(password)
+      if (acceptPwd !== 'Valid') {
+        throw new Error(acceptPwd);
+      }
+
+      //If both regex succeeds, check for existing NGO
+      const Ngos = mongo.collection('ngos');
+      const existingNgo = await Ngos.findOne({ name : orgName });
+      if (existingNgo) {
+        throw new Error ('NGO already exists. Please contact Volunteer support')
+      }
+
+      //If both regex succeeds, check for existing user
+      const Admins = mongo.collection('admins');
+      const existingAdmin = await Admins.findOne({ orgEmail });
+      if (existingAdmin) {
+        throw new Error('Only one NGO per Admin user is allowed');
+      }
+
+      //If user available, hash password with bycrpt and register user in db
+      const hash = await bcrypt.hash(password, 10);
+
+      await Admins.insert({
+        orgEmail,
+        password: hash,
+        name,
+        lastName,
+        orgName
+      });
+
+      //Find created user by ID and sign the JWT, then store to DB
+      const adminUser = await Admins.findOne({ orgEmail });
+      adminUser.jwt = jwt.sign({ _id: adminUser._id }, process.env.JWT_SECRET );
+      console.log('Admin User created');
+      return adminUser;
+    },
+
     createNGO: async ( _, {
       name,
       mission,
@@ -280,13 +328,6 @@ export const Resolvers = {
         countries,
         cities,
       });
-      // Ask Mati how to make a calculated division field in MongoCLient.
-      // const progressIndex = await
-      // //
-      // // db.coll.aggregate([
-      // //     { $project : { $divide : [ "$timeInt", timeBlock ] }}
-      // // ]);
-      //
       const cta = await Ctas.findOne({ name });
       console.log(name + ' CTA Added');
       return cta;

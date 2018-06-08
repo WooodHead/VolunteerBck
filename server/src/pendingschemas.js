@@ -10,16 +10,17 @@ type Sponsor{
 
 type Project {
   _id: String,
-  owner: NGO,
-  name: String,
-  goal: String,
-  description: String,
-  startDate: String,
-  endDate: String,
-  images:[String],
-  ctas:[CTA],
-  worldwide: String
+  ngo: NGO,
+  name: String
+  goal: String
+  description: String
+  causes: [Cause]
+  startDate: String
+  endDate: String
+  status: String
+  ctas: [CTA]
   continents: [String]
   countries: [String]
   cities: [String]
+  images: [String]
 },
