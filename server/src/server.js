@@ -5,6 +5,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import jwt from 'express-jwt';
 import * as bodyParser from 'body-parser-graphql'
 import { executableSchema } from './schema';
+import cors from 'cors';
 
 const PORT = 3000;
 const server = express();
@@ -25,7 +26,8 @@ const getMongo = async () => {
 
 getMongo();
 
-server.use('/graphql', jwt({
+// Initialize the server
+server.use('/graphql', cors(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {

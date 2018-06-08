@@ -7,7 +7,20 @@ const typeDefs = [`
     _id: String
     email: String
     password: String
+    name : String
 		jwt: String
+    causes: [Cause]
+    following: [NGO]
+    suportingCtas: [CTA]
+  },
+  type NGOAdmin {
+    _id: String
+    orgName: String
+    orgEmail: String
+    name: String
+    lastName: String
+    password: String
+    jwt: String
   },
   type NGO {
     _id: String
@@ -15,29 +28,38 @@ const typeDefs = [`
     mission: String
     description: String
     logo: String
-    dateFounded: String
-    causes: [String]
-    images:[String]
-    worldwide: String
+    causes: [Cause]
     continents: [String]
     countries: [String]
     cities: [String]
+    status : String
+    images: [String]
+  },
+  type Cause {
+    _id: String
+    name: String
   },
   type CTA {
     _id: String,
-    owner: NGO,
-    name: String,
-    goal: String,
-    description: String,
-    causes: [String],
-    startDate: String,
-    endDate: String,
-    objective: Int,
-    progress: Int,
-    images:[String],
+    name: String
+    goal: String
+    description: String
+    startDate: String
+    endDate: String
+    objective: Int
+    progress: Int
+    images:[String]
     continents: [String]
     countries: [String]
     cities: [String]
+    type: Int
+  },
+  type userCta {
+    _id: String
+    user: User
+    cta: CTA
+    status: String
+    contributionQty: Int
   },
   type Query {
     currentUser: User,
@@ -57,6 +79,13 @@ const typeDefs = [`
   type Mutation {
     login(email: String!, password: String!): User
     signup(email: String!, password: String!, name: String!): User
+    signupAdmin(
+      orgName: String!,
+      orgEmail: String!,
+      name: String!,
+      lastName: String!,
+      password: String!,
+    ): NGOAdmin
     createNGO(
       name: String!,
       mission: String!,
