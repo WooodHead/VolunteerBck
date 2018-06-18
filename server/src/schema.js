@@ -1,8 +1,17 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import { Resolvers } from './resolvers';
+import { GraphQLUpload } from 'apollo-upload-server'
 
 //Type Definitions
 const typeDefs = [`
+  scalar Upload,
+  type File {
+    id: ID
+    path: String
+    filename: String
+    mimetype: String
+    encoding: String
+  },
   type User {
     _id: String
     email: String
@@ -15,8 +24,8 @@ const typeDefs = [`
   },
   type NGOAdmin {
     _id: String
-    orgName: String
-    orgEmail: String
+    orgId: String
+    adminEmail: String
     name: String
     lastName: String
     password: String
@@ -24,16 +33,19 @@ const typeDefs = [`
   },
   type NGO {
     _id: String
-    name: String
+    orgName: String
+    orgEmail: String
+    website: String
+    orgSize: String
+    causes: [Cause]
+    countries: [String]
+    logo: String
+    bannerImg: [String]
     mission: String
     description: String
-    logo: String
-    causes: [Cause]
-    continents: [String]
-    countries: [String]
-    cities: [String]
-    status : String
-    images: [String]
+    status: String
+    validated: Int
+    ctas: [CTA]
   },
   type Cause {
     _id: String
@@ -77,27 +89,32 @@ const typeDefs = [`
     ctasByContinent(continents: String!): [CTA],
   },
   type Mutation {
+    singleUpload(file: Upload!): File!
     login(email: String!, password: String!): User
     signup(email: String!, password: String!, name: String!): User
-    signupAdmin(
-      orgName: String!,
-      orgEmail: String!,
-      name: String!,
-      lastName: String!,
-      password: String!,
-    ): NGOAdmin
-    createNGO(
-      name: String!,
-      mission: String!,
-      description: String,
-      logo: String,
-      dateFounded: String
-      causes: [String!],
-      images:[String],
-      worldwide: String,
-      continents: [String!],
-      countries: [String!],
-      cities: [String!],
+    signupAdmin(adminEmail: String!, name: String!, lastName: String!, password: String!): NGOAdmin
+    loginAdmin(adminEmail: String!, password: String!): NGOAdmin
+    createNgo1(
+      orgName: String!
+      orgEmail: String!
+      website: String!
+      orgSize: String!
+      causes: [String!]
+      countries: [String!]
+    ): NGO
+    updateNgo(
+      orgName: String
+      orgEmail: String
+      website: String
+      orgSize: String
+      causes: [String]
+      countries: [String]
+      logo: String
+      bannerImg: [String]
+      mission: String
+      description: String
+      status: String
+      ctas: [String]
     ): NGO
     createCTA(
       ngo: String!,

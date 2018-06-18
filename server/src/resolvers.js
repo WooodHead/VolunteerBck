@@ -2,8 +2,10 @@ import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { validateEmail, validatePassword, prepare } from './helpers';
+import { GraphQLUpload } from 'apollo-upload-server'
 
 export const Resolvers = {
+  Upload: GraphQLUpload,
   Query: {
     currentUser: async (_, { args }, { mongo, user }) => {
       const Users = mongo.collection('users');
@@ -201,10 +203,10 @@ export const Resolvers = {
       return user;
     },
 
-    signupAdmin: async (_, { orgName, orgEmail, name, lastName, password}, { mongo }) => {
+    signupAdmin: async (_, { adminEmail, name, lastName, password}, { mongo }) => {
 
       // Validate if valid email
-      if (!validateEmail(orgEmail)){
+      if (!validateEmail(adminEmail)){
         throw new Error ('Please enter a valid email');
       }
 
@@ -214,73 +216,134 @@ export const Resolvers = {
         throw new Error(acceptPwd);
       }
 
-      //If both regex succeeds, check for existing NGO
-      const Ngos = mongo.collection('ngos');
-      const existingNgo = await Ngos.findOne({ name : orgName });
-      if (existingNgo) {
-        throw new Error ('NGO already exists. Please contact Volunteer support')
-      }
+      // //If both regex succeeds, check for existing NGO
+      // const Ngos = mongo.collection('ngos');
+      // const existingNgo = await Ngos.findOne({ name : orgName });
+      // if (existingNgo) {
+      //   throw new Error ('NGO already exists. Please contact Volunteer support')
+      // }
 
       //If both regex succeeds, check for existing user
       const Admins = mongo.collection('admins');
-      const existingAdmin = await Admins.findOne({ orgEmail });
+      const existingAdmin = await Admins.findOne({ adminEmail });
       if (existingAdmin) {
-        throw new Error('Only one NGO per Admin user is allowed');
+        throw new Error('Only one Master Account per email is allowed');
       }
 
       //If user available, hash password with bycrpt and register user in db
       const hash = await bcrypt.hash(password, 10);
 
       await Admins.insert({
-        orgEmail,
+        adminEmail,
         password: hash,
         name,
         lastName,
-        orgName
       });
 
       //Find created user by ID and sign the JWT, then store to DB
-      const adminUser = await Admins.findOne({ orgEmail });
+      const adminUser = await Admins.findOne({ adminEmail });
       adminUser.jwt = jwt.sign({ _id: adminUser._id }, process.env.JWT_SECRET );
       console.log('Admin User created');
       return adminUser;
     },
-
-    createNGO: async ( _, {
-      name,
-      mission,
-      description,
-      logo,
-      dateFounded,
-      causes,
-      images,
-      worldwide,
-      continents,
-      countries,
-      cities
-    }, { mongo } ) => {
+    loginAdmin: async (_, { adminEmail, password }, { mongo }) => {
+      //Validate pasword
+      const acceptPwd = validatePassword(password)
+      if (acceptPwd !== 'Valid') {
+        throw new Error(acceptPwd);
+      }
+      // Validate if valid email
+      if (!validateEmail(adminEmail)){
+        throw new Error ('Please enter a valid email');
+      }
+      //Check if email exists
+      const Admins = mongo.collection('admins');
+      const admin = await Admins.findOne({ adminEmail });
+      if (!admin) {
+        throw new Error ('Email does not exist, register first');
+      }
+      // Compare with bycrypt and if false return error
+      const validPassword = await bcrypt.compare(password, admin.password);
+      if (!validPassword) {
+        throw new Error ('Password is incorrect, please try again');
+      }
+      //If succesfull, Sign Token and log admin
+      admin.jwt = jwt.sign({ _id: admin._id }, process.env.JWT_SECRET);
+      console.log('Admin ' + adminEmail + ' Logged In');
+      return admin;
+    },
+    createNgo1: async ( _, { orgName, orgEmail, website, orgSize, causes, countries, }, { mongo, user } ) => {
       const Ngos = mongo.collection('ngos');
+      const Admins = mongo.collection('admins');
+      const currentAdmin = await Admins.findOne({ _id: new ObjectId(user) });
+
+      // Check if Email is valid
+      if (!validateEmail(orgEmail)){
+        throw new Error ('Please enter a valid email');
+      }
+      // Check if it s a valid user
+      if (!currentAdmin) {
+        throw new Error ('Forbidden Access')
+      }
+      // Check if the user doesn t own an Org.
+      if(currentAdmin.orgId) {
+        throw new Error ('Only 1 NGO per Admin is Allowed')
+      }
       //Check if there´s an NGO with the same name
-      const checkExisting = await Ngos.findOne({ name });
+      const checkExisting = await Ngos.findOne({ orgName });
       if (checkExisting) {
         throw new Error ('NGO already exists. Please contact Volunteer support')
       }
       //If it doesn't, create NGO with provided inputs.
       await Ngos.insert({
-        name,
-        mission,
-        description,
-        logo,
-        dateFounded,
+        orgName,
+        orgEmail,
+        website,
+        orgSize,
         causes,
-        images,
-        worldwide,
-        continents,
         countries,
-        cities
+        status: 'active',
+        validated: 2,
       });
-      const ngo = await Ngos.findOne({ name });
-      console.log(name + ' NGO Added');
+      const ngo = await Ngos.findOne({ orgName });
+      //Check if added correctly to DB
+      if (!ngo){
+        throw new Error ('NGO not found, please try again')
+      }
+      //Update NGOadmin orgId field with newly created NGO
+      Admins.update({_id:currentAdmin._id}, {$set:{orgId:ngo._id}}, function(err, result) {
+          if (err) {
+            throw new Error ('NGO could not be associated to User, please try again')
+          }
+      });
+      console.log(orgName + ' NGO Added');
+      return ngo;
+    },
+    updateNgo: async ( _, fields, { mongo, user } ) => {
+      const Ngos = mongo.collection('ngos');
+      const Admins = mongo.collection('admins');
+      const currentAdmin = await Admins.findOne({ _id: new ObjectId(user) });
+
+      // Check if valid user
+      if (!currentAdmin || !currentAdmin.orgId) {
+        throw new Error ('Forbidden Access')
+      }
+      const ngoId = currentAdmin.orgId;
+
+      //Update NGO fields
+      const updated = await Ngos.update({_id: ngoId}, { $set: fields });
+      //Check for error
+      if (!updated){
+        throw new Error('Error in transaction, please try again')
+      }
+
+      //Get updated NGO and updated
+      const ngo = await Ngos.findOne({_id: ngoId });
+      if (!ngo){
+        throw new Error ('Ngo could not be updated, please try again')
+      }
+      console.log(ngo.orgName + 'Updated');
+      console.log(fields)
       return ngo;
     },
     createCTA: async ( _, {

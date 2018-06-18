@@ -19,6 +19,7 @@
   "dependencies": {
     "apollo-engine": "^1.0.4-evans.0",
     "apollo-server-express": "^1.2.0",
+    "apollo-upload-server": "^5.0.0",
     "babel-watch": "^2.0.7",
     "bcrypt": "^1.0.3",
     "body-parser-graphql": "^1.0.0",

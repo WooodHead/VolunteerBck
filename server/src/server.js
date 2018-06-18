@@ -2,6 +2,7 @@ require('dotenv').config()
 import express from 'express';
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { MongoClient, ObjectId } from 'mongodb';
+import { apolloUploadExpress } from 'apollo-upload-server'
 import jwt from 'express-jwt';
 import * as bodyParser from 'body-parser-graphql'
 import { executableSchema } from './schema';
@@ -27,7 +28,8 @@ const getMongo = async () => {
 getMongo();
 
 // Initialize the server
-server.use('/graphql', cors(), jwt({
+server.use(
+  '/graphql', apolloUploadExpress(),cors(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
