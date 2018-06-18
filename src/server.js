@@ -12,6 +12,18 @@ import cors from 'cors';
 const PORT = 3000;
 const server = express();
 
+//CORSESETUP
+const whitelist = ['https://volunteer-org.herokuapp.com', 'http://localhost:3000']
+const corsOptionsDelegate = function (req, callback) {
+  let corsOptions;
+  if (whitelist.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: true }
+  }else{
+    corsOptions = { origin: false }
+  }
+  callback(null, corsOptions)
+}
+
 // const engine = new ApolloEngine({
 //   apiKey: process.env.APOLLO_ENGINE
 // });
@@ -30,15 +42,13 @@ const getMongo = async () => {
     console.log(err);
   }
 }
-
 getMongo();
 
 // Enable CORS for all routes
-server.options('*', cors())
 
 // Initialize the server
 server.use(
-  '/graphql', apolloUploadExpress(), jwt({
+  '/graphql', cors(corsOptionsDelegate), apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
