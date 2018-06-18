@@ -15,6 +15,7 @@ const server = express();
 // const engine = new ApolloEngine({
 //   apiKey: process.env.APOLLO_ENGINE
 // });
+//send me to valhalla
 
 //Connect to DB
 let mongo;
@@ -32,9 +33,12 @@ const getMongo = async () => {
 
 getMongo();
 
+// Enable CORS for all routes
+server.options('*', cors())
+
 // Initialize the server
 server.use(
-  '/', apolloUploadExpress(),cors(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
