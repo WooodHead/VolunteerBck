@@ -1,5 +1,6 @@
 require('dotenv').config()
 import express from 'express';
+// import { ApolloEngine } from 'apollo-engine'
 import { graphqlExpress, graphiqlExpress } from 'apollo-server-express';
 import { MongoClient, ObjectId } from 'mongodb';
 import { apolloUploadExpress } from 'apollo-upload-server'
@@ -10,6 +11,10 @@ import cors from 'cors';
 
 const PORT = 3000;
 const server = express();
+
+// const engine = new ApolloEngine({
+//   apiKey: process.env.APOLLO_ENGINE
+// });
 
 //Connect to DB
 let mongo;
