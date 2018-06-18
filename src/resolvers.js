@@ -1,8 +1,10 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { validateEmail, validatePassword, prepare } from './helpers';
 import { GraphQLUpload } from 'apollo-upload-server'
+
+
 
 export const Resolvers = {
   Upload: GraphQLUpload,
@@ -160,7 +162,7 @@ export const Resolvers = {
       }
 
       //If user available, hash password with bycrpt and register user in db
-      const hash = await bcrypt.hash(password, 10);
+      const hash = await bcryptjs.hashSync(password, 10);
       await Users.insert({
         email,
         name,
@@ -193,7 +195,7 @@ export const Resolvers = {
       if (!user) {
         throw new Error ('Email does not exist, register first');
       }
-      const validPassword = await bcrypt.compare(password, user.password);
+      const validPassword = await bcryptjs.compareSync(password, user.password);
 
       if (!validPassword) {
         throw new Error ('Password is incorrect, please try again');
@@ -231,7 +233,7 @@ export const Resolvers = {
       }
 
       //If user available, hash password with bycrpt and register user in db
-      const hash = await bcrypt.hash(password, 10);
+      const hash = await bcryptjs.hashSync(password, 10);
 
       await Admins.insert({
         adminEmail,
@@ -263,7 +265,7 @@ export const Resolvers = {
         throw new Error ('Email does not exist, register first');
       }
       // Compare with bycrypt and if false return error
-      const validPassword = await bcrypt.compare(password, admin.password);
+      const validPassword = await bcryptjs.compareSync(password, admin.password);
       if (!validPassword) {
         throw new Error ('Password is incorrect, please try again');
       }
