@@ -13,7 +13,7 @@ const PORT = 3000;
 const server = express();
 
 //CORSESETUP
-const whitelist = ['https://volunteer-org.herokuapp.com', 'http://localhost:3000']
+const whitelist = ['volunteer-org.herokuapp.com', 'localhost:3000']
 const corsOptionsDelegate = function (req, callback) {
   let corsOptions;
   if (whitelist.indexOf(req.header('Origin')) !== -1) {
@@ -24,10 +24,8 @@ const corsOptionsDelegate = function (req, callback) {
   callback(null, corsOptions)
 }
 
-// const engine = new ApolloEngine({
-//   apiKey: process.env.APOLLO_ENGINE
-// });
-//send me to valhalla
+// Enable CORS for all routes
+server.use(cors(corsOptionsDelegate))
 
 //Connect to DB
 let mongo;
@@ -44,11 +42,9 @@ const getMongo = async () => {
 }
 getMongo();
 
-// Enable CORS for all routes
-
 // Initialize the server
 server.use(
-  '/graphql', cors(corsOptionsDelegate), apolloUploadExpress(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
@@ -63,11 +59,11 @@ server.use(
   };
 }));
 
-// //GraphiQL End point for testing (no token);
-// server.use('/graphiql', graphiqlExpress({
-//   endpointURL: '/graphql',
-//   query: ``,
-// }));
+//GraphiQL End point for testing (no token);
+server.use('/graphiql', graphiqlExpress({
+  endpointURL: '/graphql',
+  query: ``,
+}));
 
 server.listen(PORT, () => {
   console.log(`Volunteer GraphQL Server is running on http://localhost:${PORT}/graphql`);
