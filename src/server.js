@@ -11,23 +11,24 @@ import cors from 'cors';
 
 const PORT = 3000;
 const server = express();
+server.use(cors())
+server.options('*', cors())
 
 //CORSESETUP
-const whitelist = ['https://volunteer-org.herokuapp.com', 'http://localhost:3000']
-const corsOptionsDelegate = function (req, callback) {
-  let corsOptions;
-  if (whitelist.indexOf(req.header('Origin')) !== -1) {
-    corsOptions = { origin: true }
-  }else{
-    corsOptions = { origin: false }
-  }
-  callback(null, corsOptions)
-}
-
-// const engine = new ApolloEngine({
-//   apiKey: process.env.APOLLO_ENGINE
-// });
-//send me to valhalla
+// const whitelist = ['http://volunteer-org.herokuapp.com']
+// const corsOptionsDelegate = function (req, callback) {
+//   let corsOptions;
+//   if (whitelist.indexOf(req.header('Origin')) !== -1) {
+//     console.log('true')
+//     corsOptions = { origin: true }
+//   }else{
+//     corsOptions = { origin: false }
+//   }
+//   callback(null, corsOptions)
+// }
+//
+//
+// , cors(corsOptionsDelegate),
 
 //Connect to DB
 let mongo;
@@ -44,11 +45,9 @@ const getMongo = async () => {
 }
 getMongo();
 
-// Enable CORS for all routes
-
 // Initialize the server
 server.use(
-  '/graphql', cors(corsOptionsDelegate), apolloUploadExpress(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
