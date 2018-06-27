@@ -11,6 +11,7 @@ import cors from 'cors';
 
 const server = express();
 server.use(cors())
+server.options('*', cors())
 
 let corseOptions = {
   "origin": 'http://volunteer-org.herokuapp.com',
@@ -52,11 +53,11 @@ server.use(
   };
 }));
 
-// //GraphiQL End point for testing (no token);
-server.use('/graphiql', graphiqlExpress({
-  endpointURL: '/graphql',
-  query: ``,
-}));
+// // //GraphiQL End point for testing (no token);
+// server.use('/graphiql', graphiqlExpress({
+//   endpointURL: '/graphql',
+//   query: ``,
+// }));
 
 server.listen(process.env.PORT || 5000, () => {
   console.log(`Volunteer GraphQL Server is running on ${process.env.PORT}`);
