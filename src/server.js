@@ -11,11 +11,12 @@ import cors from 'cors';
 
 const server = express();
 
-let corseOptions = {
+let corsOptions = {
   "origin": 'http://volunteer-org.herokuapp.com',
-  "methods": "GET,POST",
+  "methods": "GET, OPTIONS, HEAD, POST",
   "preflightContinue": true,
-  "allowedHeaders": ['Content-type', 'Authorization']
+  "allowedHeaders": ['Content-Type', 'Authorization', 'X-PINGOTHER'],
+  "credentials": true
 }
 
 //Connect to DB
@@ -35,7 +36,7 @@ getMongo();
 
 // Initialize the server
 server.use(
-  '/graphql', cors(corseOptions), apolloUploadExpress(), jwt({
+  '/graphql', cors(corsOptions), apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
