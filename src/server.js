@@ -10,17 +10,14 @@ import { executableSchema } from './schema';
 import cors from 'cors';
 
 const server = express();
-
-server.use(cors(corseOptions))
+server.use(cors())
 
 let corseOptions = {
   "origin": 'http://volunteer-org.herokuapp.com',
-  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+  "methods": "GET,POST",
   "preflightContinue": true,
   "allowedHeaders": ['content-type', 'authorization']
 }
-
-
 console.log(corseOptions)
 
 //Connect to DB
@@ -56,10 +53,10 @@ server.use(
 }));
 
 // //GraphiQL End point for testing (no token);
-// server.use('/graphiql', graphiqlExpress({
-//   endpointURL: '/graphql',
-//   query: ``,
-// }));
+server.use('/graphiql', graphiqlExpress({
+  endpointURL: '/graphql',
+  query: ``,
+}));
 
 server.listen(process.env.PORT || 5000, () => {
   console.log(`Volunteer GraphQL Server is running on ${process.env.PORT}`);
