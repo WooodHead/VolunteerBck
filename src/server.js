@@ -9,7 +9,6 @@ import * as bodyParser from 'body-parser-graphql'
 import { executableSchema } from './schema';
 import cors from 'cors';
 
-const PORT = 3000;
 const server = express();
 
 server.use(cors(corseOptions))
@@ -21,6 +20,8 @@ let corseOptions = {
   "allowedHeaders": ['content-type', 'authorization']
 }
 
+
+console.log(corseOptions)
 
 //Connect to DB
 let mongo;
@@ -60,6 +61,6 @@ server.use(
 //   query: ``,
 // }));
 
-server.listen(PORT, () => {
-  console.log(`Volunteer GraphQL Server is running on http://localhost:${PORT}/graphql`);
+server.listen(process.env.PORT || 5000, () => {
+  console.log(`Volunteer GraphQL Server is running on ${process.env.PORT}`);
 });
