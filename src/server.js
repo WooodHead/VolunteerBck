@@ -11,20 +11,21 @@ import cors from 'cors';
 
 const PORT = 3000;
 const server = express();
-server.use(cors(corsOptionsDelegate))
 
-const whitelist = ['http://volunteer-org.herokuapp.com']
-const corsOptionsDelegate = function (req, callback) {
-  let corsOptions;
-  if (whitelist.indexOf(req.header('Origin')) !== -1) {
-    console.log('true')
-    corsOptions = { origin: true }
-  }else{
-    console.log('false')
-    corsOptions = { origin: false }
-  }
-  callback(null, corsOptions)
-}
+server.options('*', cors())
+
+// const whitelist = ['http://volunteer-org.herokuapp.com']
+// const corsOptionsDelegate = function (req, callback) {
+//   let corsOptions;
+//   if (whitelist.indexOf(req.header('Origin')) !== -1) {
+//     console.log('true')
+//     corsOptions = { origin: true }
+//   }else{
+//     console.log('false')
+//     corsOptions = { origin: false }
+//   }
+//   callback(null, corsOptions)
+// }
 
 //Connect to DB
 let mongo;
@@ -43,7 +44,7 @@ getMongo();
 
 // Initialize the server
 server.use(
-  '/graphql', cors(corsOptionsDelegate), apolloUploadExpress(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
