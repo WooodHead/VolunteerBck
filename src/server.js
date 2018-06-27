@@ -12,16 +12,14 @@ import cors from 'cors';
 const PORT = 3000;
 const server = express();
 
-server.options('*', cors(corseOptions))
+server.use(cors(corseOptions))
 
 let corseOptions = {
-  "origin": whitelisted,
+  "origin": 'http://volunteer-org.herokuapp.com',
   "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-  "allowedHeaders": ['Content-Type', 'Authorization']
+  "preflightContinue": false,
+  "allowedHeaders": ['content-type', 'authorization']
 }
-
-const whitelisted = ['http://volunteer-org.herokuapp.com']
-
 
 
 //Connect to DB
