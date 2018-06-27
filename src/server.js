@@ -16,7 +16,7 @@ server.use(cors(corseOptions))
 let corseOptions = {
   "origin": 'http://volunteer-org.herokuapp.com',
   "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
-  "preflightContinue": false,
+  "preflightContinue": true,
   "allowedHeaders": ['content-type', 'authorization']
 }
 
