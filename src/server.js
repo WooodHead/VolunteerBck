@@ -12,20 +12,17 @@ import cors from 'cors';
 const PORT = 3000;
 const server = express();
 
-server.options('*', cors())
+server.options('*', cors(corseOptions))
 
-// const whitelist = ['http://volunteer-org.herokuapp.com']
-// const corsOptionsDelegate = function (req, callback) {
-//   let corsOptions;
-//   if (whitelist.indexOf(req.header('Origin')) !== -1) {
-//     console.log('true')
-//     corsOptions = { origin: true }
-//   }else{
-//     console.log('false')
-//     corsOptions = { origin: false }
-//   }
-//   callback(null, corsOptions)
-// }
+let corseOptions = {
+  "origin": whitelisted,
+  "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
+  "allowedHeaders": ['Content-Type', 'Authorization']
+}
+
+const whitelisted = ['http://volunteer-org.herokuapp.com']
+
+
 
 //Connect to DB
 let mongo;
