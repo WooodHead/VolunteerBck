@@ -12,10 +12,10 @@ import cors from 'cors';
 const server = express();
 
 let corsOptions = {
-  "origin": 'http://volunteer-org.herokuapp.com',
+  "origin": 'https://volunteer-org.herokuapp.com',
   "methods": "GET, OPTIONS, HEAD, POST",
   "preflightContinue": true,
-  "allowedHeaders": ['Content-Type', 'Authorization', 'X-PINGOTHER'],
+  "allowedHeaders": ['Content-Type', 'Authorization'],
   "credentials": true
 }
 
