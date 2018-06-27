@@ -10,14 +10,14 @@ import { executableSchema } from './schema';
 import cors from 'cors';
 
 const server = express();
-server.use(cors())
-server.options('*', cors())
+server.use(cors(corseOptions))
+server.options(corseOptions,cors())
 
 let corseOptions = {
   "origin": 'http://volunteer-org.herokuapp.com',
   "methods": "GET,POST",
   "preflightContinue": true,
-  "allowedHeaders": ['content-type', 'authorization']
+  "allowedHeaders": ['Content-type', 'Authorization']
 }
 console.log(corseOptions)
 
