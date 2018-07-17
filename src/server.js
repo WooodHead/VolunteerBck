@@ -10,14 +10,16 @@ import { executableSchema } from './schema';
 import cors from 'cors';
 
 const server = express();
+server.use(cors(corseOptions))
 
-let corsOptions = {
-  "origin": 'https://volunteer-org.herokuapp.com',
-  "methods": "GET, OPTIONS, HEAD, POST",
+let corseOptions = {
+  "origin": 'http://volunteer-org.herokuapp.com',
+  "methods": "GET, PUT, POST",
   "preflightContinue": true,
-  "allowedHeaders": ['Content-Type', 'Authorization'],
-  "credentials": true
+  "allowedHeaders": ['Content-type', 'Authorization'],
+  "preflightContinue": true,
 }
+console.log(corseOptions)
 
 //Connect to DB
 let mongo;
@@ -34,9 +36,11 @@ const getMongo = async () => {
 }
 getMongo();
 
+server.options('*', cors())
+
 // Initialize the server
 server.use(
-  '/graphql', cors(corsOptions), apolloUploadExpress(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
@@ -50,12 +54,6 @@ server.use(
     },
   };
 }));
-
-// // //GraphiQL End point for testing (no token);
-// server.use('/graphiql', graphiqlExpress({
-//   endpointURL: '/graphql',
-//   query: ``,
-// }));
 
 server.listen(process.env.PORT || 5000, () => {
   console.log(`Volunteer GraphQL Server is running on ${process.env.PORT}`);
