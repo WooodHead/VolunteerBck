@@ -34,6 +34,7 @@ const getMongo = async () => {
 }
 getMongo();
 
+server.options('*', cors(corseOptions))
 // Initialize the server
 server.use(
   '/graphql', cors(corseOptions), apolloUploadExpress(), jwt({
@@ -41,6 +42,7 @@ server.use(
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
 
+  console.log(req)
   //Return schema and context with DB connection and user if exists.
   return {
     schema: executableSchema,
