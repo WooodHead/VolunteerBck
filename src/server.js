@@ -10,12 +10,12 @@ import { executableSchema } from './schema';
 import cors from 'cors';
 
 const server = express();
+server.use(cors(corseOptions))
 
 let corseOptions = {
   "origin": "*",
-  "methods": "HEAD, GET, POST, PUT, PATCH, DELETE",
-  "allowedHeaders": ['Content-type', 'Authorization'],
-  "preflightContinue": true,
+  "methods": "HEAD, GET, POST, PUT, PATCH, DELETE, OPTIONS",
+  "allowedHeaders": ['Content-Type', 'Authorization', 'token'],
 }
 console.log(corseOptions)
 
@@ -34,10 +34,9 @@ const getMongo = async () => {
 }
 getMongo();
 
-server.options('*', cors(corseOptions))
 // Initialize the server
 server.use(
-  '/graphql', cors(corseOptions), apolloUploadExpress(), jwt({
+  '/graphql', apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
