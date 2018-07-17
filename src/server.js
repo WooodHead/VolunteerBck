@@ -10,12 +10,10 @@ import { executableSchema } from './schema';
 import cors from 'cors';
 
 const server = express();
-server.use(cors(corseOptions))
 
 let corseOptions = {
-  "origin": 'http://volunteer-org.herokuapp.com',
-  "methods": "GET, PUT, POST",
-  "preflightContinue": true,
+  "origin": "*",
+  "methods": "HEAD, GET, POST, PUT, PATCH, DELETE",
   "allowedHeaders": ['Content-type', 'Authorization'],
   "preflightContinue": true,
 }
@@ -36,11 +34,9 @@ const getMongo = async () => {
 }
 getMongo();
 
-server.options('*', cors())
-
 // Initialize the server
 server.use(
-  '/graphql', apolloUploadExpress(), jwt({
+  '/graphql', cors(corseOptions), apolloUploadExpress(), jwt({
   secret: process.env.JWT_SECRET,
   credentialsRequired: false,
 }), bodyParser.graphql(), graphqlExpress(async req => {
